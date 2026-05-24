@@ -1,0 +1,81 @@
+Create a complete React 19 + Vite + TypeScript + TailwindCSS project called "netco-vpn". This is a VPN config selling platform for Kenya. Generate ALL files listed below with complete, working code.
+## PROJECT OVERVIEW
+NETCO is a premium VPN internet config provider for Kenya. It sells device-locked VPN configurations for HTTP Custom and HTTP Injector apps. Users purchase plans for Safaricom, Airtel, or Telkom networks. Payments are processed via M-Pesa STK Push through a payment gateway called PayFlow (API at https://payflow.top/api/v2). The project has a dark cyberpunk theme with cyan (#00F5FF) and purple (#7B61FF) accents.
+## TECH STACK
+- React 19.1.0, React DOM 19.1.0, React Router DOM 7.6.3
+- Vite 8.0.1 with @vitejs/plugin-react 6.0.1
+- TypeScript 5.8.3
+- TailwindCSS 3.4.17, PostCSS 8.5.6, Autoprefixer 10.4.21
+- i18next 25.4.1, react-i18next 15.6.0, i18next-browser-languagedetector 8.2.0
+- @supabase/supabase-js 2.57.4
+- framer-motion 12.23.12
+- recharts 3.2.0
+- lucide-react 0.539.0
+- @react-three/fiber 9.3.0, @react-three/drei 10.6.1, three 0.179.1
+- @stripe/react-stripe-js 4.0.2
+- Google Fonts: Space Grotesk (headings), Inter (body)
+- Font Awesome 6.4.0 CDN, Remix Icon 4.5.0 CDN
+## DESIGN SYSTEM
+- Background: #0A0E27 (netco-dark)
+- Cards: #11183A (netco-card) with backdrop blur
+- Borders: #1A2247
+- Primary accent: #00F5FF (cyan)
+- Secondary accent: #7B61FF (purple)
+- Success: #00E676, Warning: #FFB800, Pink: #FF2D92
+- Hero sections use full-bleed background images with dark gradient overlays
+- Glass card effect: backdrop-filter blur, rgba borders
+- All buttons have hover glow effects
+- No drop shadows (they look dirty)
+- Rounded-lg (8px) for cards, rounded-md (6px) for buttons, rounded-full for pills
+- Font sizes: 14px-16px body, no oversized headings
+- Responsive: Desktop-first, mobile overrides with breakpoints
+## FILE STRUCTURE TO CREATE
+### Root Config Files
+1. package.json — include ALL dependencies listed above
+2. vite.config.ts — React plugin, AutoImport for react/react-router-dom/react-i18next APIs, alias "@/" to "./src", base path from env, define __BASE_PATH__
+3. tsconfig.json — references to tsconfig.app.json and tsconfig.node.json
+4. tsconfig.app.json — ES2022, DOM, bundler moduleResolution, paths {"@/*": ["./src/*"]}, strict: false, noUnusedLocals: false
+5. tsconfig.node.json — for vite.config.ts
+6. tailwind.config.ts — extend colors (netco-dark, netco-card, netco-border, netco-cyan, netco-purple, netco-pink, netco-success, netco-warning), fontFamily heading Space Grotesk and body Inter, custom animations (pulse-glow, float, shimmer, grid-move), boxShadow cyan/purple/card, backgroundImage cyber-grid
+7. postcss.config.ts — tailwindcss + autoprefixer
+8. index.html — title "NETCO - Unlimited VPN Internet for Kenya", viewport meta, Google Fonts preconnect, Font Awesome and Remix Icon CDNs, script src /src/main.tsx
+9. vite-env.d.ts — declare __BASE_PATH__, __IS_PREVIEW__, __READDY_PROJECT_ID__, __READDY_VERSION_ID__, __READDY_AI_DOMAIN__
+10. eslint.config.ts — standard React + TS config with auto-import globals
+11. eslint-rules/route-element-jsx.js — custom ESLint rule enforcing JSX in route elements
+### Source Entry & Global Styles
+12. src/main.tsx — StrictMode, import './i18n', createRoot render App
+13. src/App.tsx — BrowserRouter with basename __BASE_PATH__, I18nextProvider, Navbar + main + Footer, bg-netco-dark
+14. src/index.css — @tailwind directives, base styles (scroll-behavior, body bg #0A0E27, scrollbar styling), component classes (glass-card, glass-card-hover, glow-text-cyan, glow-text-purple, gradient-text, btn-primary, btn-secondary, cyber-grid-bg, section-padding)
+### Router
+15. src/router/index.ts — AppRoutes function using useRoutes, navigatePromise, window.REACT_APP_NAVIGATE
+16. src/router/config.tsx — RouteObject[] with routes: / (Home), /login (Login), /signup (Signup), /pricing (Pricing), /how-to-connect (HowToConnect), /contact (Contact), /faqs (FAQs), /terms (Terms), /check-expiry (CheckExpiry), /dashboard (Dashboard), /server-status (ServerStatus), /checkout (Checkout), /admin (Admin), * (NotFound). ALL elements must be JSX elements like <Component />, NOT component references.
+### i18n
+17. src/i18n/index.ts — i18next init with LanguageDetector, initReactI18next, lng: 'en', resources from ./local/index
+18. src/i18n/local/index.ts — use import.meta.glob('./*/*.ts', { eager: true }) to auto-load translation modules
+### Lib & Config
+19. src/lib/supabase.ts — createClient from @supabase/supabase-js using VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY env vars. Define full Database interface with Tables: profiles, config_servers, orders, user_plans, transactions, activity_logs, contact_messages. Export typed row types.
+20. src/config/payflow.ts — PAYFLOW_CONFIG with BASE_URL "https://payflow.top/api/v2", API_KEY, API_SECRET, PAYMENT_ACCOUNT_ID. isPayflowConfigured() function. PAYFLOW_EDGE_FUNCTIONS constants.
+21. src/services/payflow.ts — initiateStkPush, checkPaymentStatus, listTransactions. Support both Supabase Edge Functions AND direct API fallback. Full TypeScript interfaces for StkPushRequest, StkPushResponse, CheckStatusRequest, CheckStatusResponse, Transaction, ListTransactionsResponse.
+22. src/hooks/usePayflowPayment.ts — React hook managing payment state machine: idle → initiating → prompt_sent → polling → completed/failed/cancelled/timeout/error. Polls every 5s for 90s max. Uses useCallback, useRef for timers.
+### Mock Data Files
+23. src/mocks/packages.ts — NetworkData[] with 3 networks (Safaricom, Airtel, Telkom). Each has categories: Unlimited VPN, Capped/Limited VPN, WiFi Installation. Each category has PackagePlan[] with id, name, speed, description, dailyPrice, weeklyPrice, monthlyPrice, dailyLabel, weeklyLabel, monthlyLabel, popular boolean, features string[]. Realistic Kenyan pricing.
+24. src/mocks/dashboard.ts — ActivePlan[] with mock active and expired plans. Interface with id, network, planName, planType, duration, appType, deviceId, expiryDate, status, configUrl, fileExtension, speed.
+25. src/mocks/admin.ts — AdminStats, AdminUser[], AdminOrder[], revenue by network, revenue by month, recent activity, ConfigServer[]. Full realistic mock data for an admin panel with charts.
+26. src/mocks/contact.ts — ContactInfo with whatsapp, email, supportHours, telegram.
+27. src/mocks/faqs.ts — FAQItem[] with 12+ questions covering: what is NETCO, how it works, required apps, finding Device ID/HWID, legality, payment methods, delivery time, sharing configs, new phones, speed, expiry reminders, WiFi setup.
+28. src/mocks/howToConnect.ts — AppGuide[] for HTTP Injector and HTTP Custom. Each has id, name, icon, identifierLabel (Device ID / HWID), fileExtension (.ehi / .hc), playStoreUrl, 5 steps with titles/descriptions/highlights, and 4 tips.
+29. src/mocks/stats.ts — StatItem[] with active users (12,450+), servers online (24/24), uptime (99.9%), support (24/7).
+### Shared Components
+30. src/components/feature/Navbar.tsx — Fixed navbar, transparent initially, white bg on scroll. Logo "NETCO" with gradient text. Nav links: Home, Pricing, How to Connect, FAQs, Contact. Auth buttons: Login, Signup. Mobile hamburger menu. Active link highlighting. Use Remix Icon for icons. Responsive with hidden md:flex for desktop links, md:hidden for mobile menu. NO max-width on navbar container.
+31. src/components/feature/Footer.tsx — Multi-column footer with: brand column, Quick Links, Support, Contact Info, Newsletter. Copyright bar. Social icons. Responsive grid. Footer BG MUST NOT be black or dark gray — use a distinct color like deep navy or dark teal.
+### Pages
+32. src/pages/home/page.tsx — Compose HeroSection + StatsSection + PackagesSection + HowToConnectSection (simplified) + CTA section.
+33. src/pages/home/components/HeroSection.tsx — Full-width hero with animated background (GlobeCanvas or gradient), centered text "Unlimited VPN Internet for Kenya", subtitle, two CTAs (Get Started / How It Works), dark overlay on bg image. H1 must be w-full.
+34. src/pages/home/components/StatsSection.tsx — 4 stat cards from mock stats with icons and counters.
+35. src/pages/home/components/PackagesSection.tsx — Tab switcher for 3 networks (Safaricom/Airtel/Telkom). Each tab shows category tabs (Unlimited/Capped/WiFi). Plan cards with pricing, features, "Buy Now" button linking to /checkout with state. Popular plans get a badge. Cards must have clear layering from background.
+36. src/pages/home/components/HowToConnect.tsx — Brief 3-step guide with icons, linking to full /how-to-connect page.
+37. src/pages/home/components/GlobeCanvas.tsx — Three.js globe using @react-three/fiber and @react-three/drei. Rotating wireframe globe with cyan glow particles. Use useFrame for animation. Canvas with camera position. If Three.js fails, fallback to a CSS animated globe div.
+38. src/pages/pricing/page.tsx — Full pricing page with ALL plans from packages.ts. Network tabs + category tabs. More detailed than homepage. Include FAQ accordion at bottom.
+39. src/pages/checkout/page.tsx — Multi-step checkout: 1) Select plan summary from location.state, 2) Choose app type (HTTP Custom / HTTP Injector) with device ID input, 3) Enter M-Pesa phone number, 4) Pay with M-Pesa STK Push using usePayflowPayment hook. Show payment status with animated states. On success, show order confirmation.
+40. src/pages/dashboard/page.tsx — User dashboard with: welcome header, active plans cards with expiry countdown timers, expired plans, download config buttons, "Check Expiry" link, usage stats cards. Use recharts for a
+Test the Replit prompt by pasting it and report
