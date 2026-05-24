@@ -1,6 +1,6 @@
 import type { VercelRequest, VercelResponse } from "@vercel/node";
 import app from "../artifacts/api-server/src/app";
 
-export default function handler(req: VercelRequest, res: VercelResponse) {
-  return app(req as any, res as any);
-}
+const handler = app as unknown as (req: VercelRequest, res: VercelResponse) => void;
+
+export default handler;
