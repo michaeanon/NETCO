@@ -1,0 +1,63 @@
+Build a secure admin dashboard for "NETCO", a VPN reseller website for HTTP Injector and HTTP Custom.
+
+**Access & Security:**
+Protected route at /admin. Only accessible via admin login with email + password. Use role-based auth. Log out after 30 min inactivity.
+
+**Design:**
+Modern "Cyber Tech" dashboard. Dark theme #0A0E27 background, glassmorphism cards, cyan #00F5FF accents. Sidebar navigation with collapsible menu. Use data tables with search, filter, and pagination. Charts with Recharts. Icons from Lucide-react.
+
+**Core Admin Modules:**
+
+1. **Dashboard Overview**
+   - KPI Cards: Total Revenue Today, Active Subscriptions, New Orders, Servers Online
+   - Charts: Sales per Network [Safaricom/Airtel/Telkom], Revenue last 30 days, Plan Types Sold
+   - Recent Activity Feed: New purchases, expiring users in 24hrs
+
+2. **Config Server Management - CRITICAL**
+   At admin I should be able to add configs servers for http apps. 
+   - Section title: "VPN Config Servers"
+   - Add New Server Button -> Modal with fields:
+     * Network: Dropdown [Safaricom, Airtel, Telkom]
+     * App Type: Dropdown [HTTP Injector, HTTP Custom]
+     * Plan Type: Dropdown [Unlimited, Capped, WiFi]
+     * Duration: Dropdown [Daily, Weekly, Monthly]
+     * Upload Base Config File: Upload .ehi for Injector or .hc for HTTP Custom
+     * Server Name: Text input, e.g. "Safaricom Unlimited Monthly"
+     * Status: Toggle [Active / Inactive]
+   - Table showing all servers with: Network, App, Plan, Duration, File Name, Status, Date Added, Actions [Edit, Delete, Test]
+   - When editing, I can replace the base .ehi or .hc file.
+
+3. **User & Subscription Management**
+   - Table: Username, Phone, HWID/Device ID, Network, Active Plan, Expiry Date, Status
+   - Actions per user: Extend Time [+days], Revoke Access, Regenerate Config, View Order History
+   - Bulk actions: Select multiple users > Extend or Revoke
+   - Search by: HWID, Device ID, Phone, Username
+   - "Expiring Soon" tab: Shows users expiring in 24hrs for renewal follow-up
+
+4. **Order Management**
+   - Tabs: Pending Payment | Paid | Completed | Failed
+   - Each order shows: Order ID, User, HWID/Device ID, Plan Details, Amount KES, Payment Status, Date
+   - Action on Paid orders: "Generate Config" button. When clicked, system takes the correct base server file, injects the user's HWID or Device ID, sets expiry date based on plan duration, and generates a unique download link. Mark order as "Completed" and send link to user.
+   - Manual order creation: For cash payments, admin can create order + manually set expiry.
+
+5. **Plan & Pricing Manager**
+   - CRUD for all plans. Fields: Network, Category [Unlimited/Capped/WiFi], Duration, Price KES, Speed, Data Limit, Description
+   - Toggle plans On/Off without deleting
+   - Set promo prices with start/end date
+
+6. **Free Configs Section**
+   - Create time-limited free configs for marketing
+   - Fields: Network, App Type, Duration in hours, Max Claims, Base Config File
+   - Auto-expires and limits 1 claim per HWID/Device ID
+
+7. **Settings**
+   - M-Pesa API keys placeholder
+   - WhatsApp support number
+   - Terms & auto-message templates
+   - Backup/Export database
+
+**Key Logic Requirement:**
+The "Generate Config" function must lock the .ehi/.hc file to the specific HWID for HTTP Custom or Device ID for HTTP Injector. The file should stop working after the expiry timestamp. The system must prevent the same config from working on multiple devices.
+
+**Tech Stack:**
+Next.js 14, TailwindCSS, Supabase for DB + Auth + File Storage. Use serverless functions for the config generator. All tables must be mobile responsive.

@@ -21,8 +21,11 @@ import type {
 
 import type {
   AdminStats,
+  ConfigServer,
+  ConfigServerStatusUpdate,
   ContactInput,
   ContactMessage,
+  DeleteConfigServer200,
   HealthStatus,
   ListPlansParams,
   NetworkData,
@@ -961,4 +964,223 @@ export function useGetAdminStats<TData = Awaited<ReturnType<typeof getAdminStats
 
 
 
+
+export const getListConfigServersUrl = () => {
+
+
+
+
+  return `/api/admin/servers`
+}
+
+/**
+ * @summary List all VPN config servers
+ */
+export const listConfigServers = async ( options?: RequestInit): Promise<ConfigServer[]> => {
+
+  return customFetch<ConfigServer[]>(getListConfigServersUrl(),
+  {
+    ...options,
+    method: 'GET'
+
+
+  }
+);}
+
+
+
+
+
+export const getListConfigServersQueryKey = () => {
+    return [
+    `/api/admin/servers`
+    ] as const;
+    }
+
+
+export const getListConfigServersQueryOptions = <TData = Awaited<ReturnType<typeof listConfigServers>>, TError = ErrorType<unknown>>( options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConfigServers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+) => {
+
+const {query: queryOptions, request: requestOptions} = options ?? {};
+
+  const queryKey =  queryOptions?.queryKey ?? getListConfigServersQueryKey();
+
+
+
+    const queryFn: QueryFunction<Awaited<ReturnType<typeof listConfigServers>>> = ({ signal }) => listConfigServers({ signal, ...requestOptions });
+
+
+
+
+
+   return  { queryKey, queryFn, ...queryOptions} as UseQueryOptions<Awaited<ReturnType<typeof listConfigServers>>, TError, TData> & { queryKey: QueryKey }
+}
+
+export type ListConfigServersQueryResult = NonNullable<Awaited<ReturnType<typeof listConfigServers>>>
+export type ListConfigServersQueryError = ErrorType<unknown>
+
+
+/**
+ * @summary List all VPN config servers
+ */
+
+export function useListConfigServers<TData = Awaited<ReturnType<typeof listConfigServers>>, TError = ErrorType<unknown>>(
+  options?: { query?:UseQueryOptions<Awaited<ReturnType<typeof listConfigServers>>, TError, TData>, request?: SecondParameter<typeof customFetch>}
+
+ ):  UseQueryResult<TData, TError> & { queryKey: QueryKey } {
+
+  const queryOptions = getListConfigServersQueryOptions(options)
+
+  const query = useQuery(queryOptions) as  UseQueryResult<TData, TError> & { queryKey: QueryKey };
+
+  return { ...query, queryKey: queryOptions.queryKey };
+}
+
+
+
+
+
+
+
+export const getDeleteConfigServerUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/servers/${id}`
+}
+
+/**
+ * @summary Delete a config server
+ */
+export const deleteConfigServer = async (id: string, options?: RequestInit): Promise<DeleteConfigServer200> => {
+
+  return customFetch<DeleteConfigServer200>(getDeleteConfigServerUrl(id),
+  {
+    ...options,
+    method: 'DELETE'
+
+
+  }
+);}
+
+
+
+
+export const getDeleteConfigServerMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteConfigServer>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof deleteConfigServer>>, TError,{id: string}, TContext> => {
+
+const mutationKey = ['deleteConfigServer'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof deleteConfigServer>>, {id: string}> = (props) => {
+          const {id} = props ?? {};
+
+          return  deleteConfigServer(id,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type DeleteConfigServerMutationResult = NonNullable<Awaited<ReturnType<typeof deleteConfigServer>>>
+
+    export type DeleteConfigServerMutationError = ErrorType<void>
+
+    /**
+ * @summary Delete a config server
+ */
+export const useDeleteConfigServer = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof deleteConfigServer>>, TError,{id: string}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof deleteConfigServer>>,
+        TError,
+        {id: string},
+        TContext
+      > => {
+      return useMutation(getDeleteConfigServerMutationOptions(options));
+    }
+
+export const getUpdateConfigServerStatusUrl = (id: string,) => {
+
+
+
+
+  return `/api/admin/servers/${id}`
+}
+
+/**
+ * @summary Toggle config server active/inactive status
+ */
+export const updateConfigServerStatus = async (id: string,
+    configServerStatusUpdate: ConfigServerStatusUpdate, options?: RequestInit): Promise<ConfigServer> => {
+
+  return customFetch<ConfigServer>(getUpdateConfigServerStatusUrl(id),
+  {
+    ...options,
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', ...options?.headers },
+    body: JSON.stringify(
+      configServerStatusUpdate,)
+  }
+);}
+
+
+
+
+export const getUpdateConfigServerStatusMutationOptions = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConfigServerStatus>>, TError,{id: string;data: BodyType<ConfigServerStatusUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+): UseMutationOptions<Awaited<ReturnType<typeof updateConfigServerStatus>>, TError,{id: string;data: BodyType<ConfigServerStatusUpdate>}, TContext> => {
+
+const mutationKey = ['updateConfigServerStatus'];
+const {mutation: mutationOptions, request: requestOptions} = options ?
+      options.mutation && 'mutationKey' in options.mutation && options.mutation.mutationKey ?
+      options
+      : {...options, mutation: {...options.mutation, mutationKey}}
+      : {mutation: { mutationKey, }, request: undefined};
+
+
+
+
+      const mutationFn: MutationFunction<Awaited<ReturnType<typeof updateConfigServerStatus>>, {id: string;data: BodyType<ConfigServerStatusUpdate>}> = (props) => {
+          const {id,data} = props ?? {};
+
+          return  updateConfigServerStatus(id,data,requestOptions)
+        }
+
+
+
+
+
+
+  return  { mutationFn, ...mutationOptions }}
+
+    export type UpdateConfigServerStatusMutationResult = NonNullable<Awaited<ReturnType<typeof updateConfigServerStatus>>>
+    export type UpdateConfigServerStatusMutationBody = BodyType<ConfigServerStatusUpdate>
+    export type UpdateConfigServerStatusMutationError = ErrorType<void>
+
+    /**
+ * @summary Toggle config server active/inactive status
+ */
+export const useUpdateConfigServerStatus = <TError = ErrorType<void>,
+    TContext = unknown>(options?: { mutation?:UseMutationOptions<Awaited<ReturnType<typeof updateConfigServerStatus>>, TError,{id: string;data: BodyType<ConfigServerStatusUpdate>}, TContext>, request?: SecondParameter<typeof customFetch>}
+ ): UseMutationResult<
+        Awaited<ReturnType<typeof updateConfigServerStatus>>,
+        TError,
+        {id: string;data: BodyType<ConfigServerStatusUpdate>},
+        TContext
+      > => {
+      return useMutation(getUpdateConfigServerStatusMutationOptions(options));
+    }
 

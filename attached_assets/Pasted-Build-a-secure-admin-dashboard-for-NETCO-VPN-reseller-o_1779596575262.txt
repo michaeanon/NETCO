@@ -1,0 +1,80 @@
+Build a secure admin dashboard for "NETCO" VPN reseller on Replit.
+
+**Tech Stack:** 
+Python Flask + HTML + TailwindCSS + Vanilla JS. Use Replit DB for data and Replit Object Storage for files. Use Flask sessions for auth.
+
+**Access:** 
+Protected route at /admin. Login with username/password from Replit Secrets: ADMIN_USER, ADMIN_PASS. Redirect to /admin/login if not authenticated.
+
+**Design:** 
+Cyber Tech theme. Dark #0A0E27 background, glassmorphism cards, electric cyan #00F5FF accents, neon purple #7B61FF. Sidebar nav, responsive tables, Lucide icons via CDN. Chart.js for graphs.
+
+**Admin Dashboard Modules:**
+
+1. **Dashboard Home - /admin**
+   - KPI Cards: Revenue Today KES, Active Subscriptions, New Orders, Expiring in 24hrs
+   - Charts: Sales by Network [Safaricom/Airtel/Telkom] bar chart, Revenue Last 7 Days line chart
+   - Recent Orders Table: Last 5 orders with HWID/Device ID, Plan, Status
+
+2. **Config Server Management - /admin/servers - CRITICAL**
+   At admin I should be able to add configs servers for http apps.
+   - Page title: "VPN Config Servers"
+   - "Add New Server" button -> Form with:
+     * Network: Dropdown [Safaricom, Airtel, Telkom]
+     * App Type: Dropdown [HTTP Injector, HTTP Custom]
+     * Plan Type: Dropdown [Unlimited, Capped, WiFi]
+     * Duration: Dropdown [Daily, Weekly, Monthly]
+     * Upload Base Config: File input accepting .ehi for Injector or .hc for HTTP Custom. Save to /uploads
+     * Server Name: Text input e.g. "Safaricom Unlimited Monthly"
+     * Status: Toggle [Active / Inactive]
+   - Data table showing all servers: ID, Network, App, Plan, Duration, Filename, Status, Date Added
+   - Actions per row: [Edit, Delete, Download]
+   - On Edit, I can replace the base .ehi or .hc file and change status.
+
+3. **User Management - /admin/users**
+   - Table: ID, Phone, HWID/Device ID, App Type [Injector/Custom], Network, Active Plan, Expiry Date, Status
+   - Actions: Extend Time [+1day/+7days/+30days buttons], Revoke Access, Regenerate Config Link, Delete
+   - Search: By HWID, Device ID, Phone
+   - Filter tabs: All Users | Active | Expired | Expiring in 24hrs
+
+4. **Order Management - /admin/orders**
+   - Tabs: Pending | Paid | Completed | Failed
+   - Table columns: Order ID, Phone, HWID/Device ID, Plan Details, Amount KES, Payment Ref, Date, Status
+   - Action for "Paid" orders: "Generate Config" button. On click:
+     1. Fetch correct base server file from /uploads based on Network+App+Plan+Duration
+     2. Inject user's HWID or Device ID + expiry timestamp into the file
+     3. Save as unique file in /static/downloads/user_12345.ehi
+     4. Generate download link and mark order "Completed"
+     5. Update user expiry date in DB
+   - Manual Order: Button to create order for cash payments + manually set expiry
+
+5. **Plans Manager - /admin/plans**
+   - CRUD table: Network, Category [Unlimited/Capped/WiFi], Duration Days, Price KES, Speed, Data Limit, Status Toggle
+   - Add/Edit Plan modal with all fields
+   - Delete plan with confirmation
+
+6. **Free Configs - /admin/free**
+   - Create promo configs: Select base server, Set Duration Hours, Max Claims
+   - System tracks claims per HWID/Device ID to limit 1 per device
+   - Table showing active free configs + claim count
+
+7. **Settings - /admin/settings**
+   - Form to update WhatsApp support number, M-Pesa API placeholder keys
+   - Export DB buttons: Export Users CSV, Export Orders CSV
+
+**Database Schema using Replit DB:**
+Store as JSON:
+- `servers`: {id, network, app_type, plan_type, duration, filename, server_name, status, created_at}
+- `users`: {id, phone, hwid_deviceid, app_type, network, plan_id, expiry_date, status}
+- `orders`: {id, user_phone, hwid_deviceid, plan_details, amount, payment_ref, status, config_link, created_at}
+- `plans`: {id, network, category, duration_days, price, speed, data_limit, status}
+
+**Key Backend Logic Required:**
+1. File upload to /uploads using `request.files`
+2. `generate_config()` function: Reads base .ehi or .hc, modifies content to add HWID/Device ID lock + expiry, writes new file to /static/downloads
+3. Session check on all /admin routes
+4. Use .replit file to run on port 8080
+
+**Important:** Add comments in code: `# TODO: Add actual M-Pesa validation` and `# TODO: Add .ehi/.hc HWID injection logic here` so I know where to add custom code later.
+
+Make all tables mobile responsive with horizontal scroll. Use Flask flash messages for success/error alerts.

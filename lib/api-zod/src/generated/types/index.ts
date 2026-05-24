@@ -7,8 +7,17 @@
  */
 
 export * from './adminStats';
+export * from './configServer';
+export * from './configServerAppType';
+export * from './configServerDuration';
+export * from './configServerNetwork';
+export * from './configServerPlanType';
+export * from './configServerStatus';
+export * from './configServerStatusUpdate';
+export * from './configServerStatusUpdateStatus';
 export * from './contactInput';
 export * from './contactMessage';
+export * from './deleteConfigServer200';
 export * from './healthStatus';
 export * from './listPlansParams';
 export * from './networkData';

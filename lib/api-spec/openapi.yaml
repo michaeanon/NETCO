@@ -242,6 +242,70 @@ paths:
               schema:
                 $ref: "#/components/schemas/AdminStats"
 
+  /admin/servers:
+    get:
+      operationId: listConfigServers
+      tags: [stats]
+      summary: List all VPN config servers
+      responses:
+        "200":
+          description: List of config servers
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ConfigServer"
+
+  /admin/servers/{id}:
+    delete:
+      operationId: deleteConfigServer
+      tags: [stats]
+      summary: Delete a config server
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Deleted
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+        "404":
+          description: Not found
+    patch:
+      operationId: updateConfigServerStatus
+      tags: [stats]
+      summary: Toggle config server active/inactive status
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ConfigServerStatusUpdate"
+      responses:
+        "200":
+          description: Updated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ConfigServer"
+        "404":
+          description: Not found
+
 components:
   schemas:
     HealthStatus:
@@ -543,3 +607,45 @@ components:
           type: number
         orders:
           type: integer
+
+    ConfigServer:
+      type: object
+      required: [id, serverName, network, appType, planType, duration, filename, originalName, status, createdAt]
+      properties:
+        id:
+          type: string
+        serverName:
+          type: string
+        network:
+          type: string
+          enum: [safaricom, airtel, telkom]
+        appType:
+          type: string
+          enum: [http_custom, http_injector]
+        planType:
+          type: string
+          enum: [unlimited, capped, wifi]
+        duration:
+          type: string
+          enum: [daily, weekly, monthly]
+        filename:
+          type: string
+        originalName:
+          type: string
+        fileSize:
+          type: ["integer", "null"]
+        status:
+          type: string
+          enum: [active, inactive]
+        createdAt:
+          type: string
+        updatedAt:
+          type: ["string", "null"]
+
+    ConfigServerStatusUpdate:
+      type: object
+      required: [status]
+      properties:
+        status:
+          type: string
+          enum: [active, inactive]

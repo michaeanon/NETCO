@@ -224,8 +224,84 @@ export interface AdminStats {
   revenueByMonth: RevenueByMonth[];
 }
 
+export type ConfigServerNetwork = typeof ConfigServerNetwork[keyof typeof ConfigServerNetwork];
+
+
+export const ConfigServerNetwork = {
+  safaricom: 'safaricom',
+  airtel: 'airtel',
+  telkom: 'telkom',
+} as const;
+
+export type ConfigServerAppType = typeof ConfigServerAppType[keyof typeof ConfigServerAppType];
+
+
+export const ConfigServerAppType = {
+  http_custom: 'http_custom',
+  http_injector: 'http_injector',
+} as const;
+
+export type ConfigServerPlanType = typeof ConfigServerPlanType[keyof typeof ConfigServerPlanType];
+
+
+export const ConfigServerPlanType = {
+  unlimited: 'unlimited',
+  capped: 'capped',
+  wifi: 'wifi',
+} as const;
+
+export type ConfigServerDuration = typeof ConfigServerDuration[keyof typeof ConfigServerDuration];
+
+
+export const ConfigServerDuration = {
+  daily: 'daily',
+  weekly: 'weekly',
+  monthly: 'monthly',
+} as const;
+
+export type ConfigServerStatus = typeof ConfigServerStatus[keyof typeof ConfigServerStatus];
+
+
+export const ConfigServerStatus = {
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
+export interface ConfigServer {
+  id: string;
+  serverName: string;
+  network: ConfigServerNetwork;
+  appType: ConfigServerAppType;
+  planType: ConfigServerPlanType;
+  duration: ConfigServerDuration;
+  filename: string;
+  originalName: string;
+  /** @nullable */
+  fileSize?: number | null;
+  status: ConfigServerStatus;
+  createdAt: string;
+  /** @nullable */
+  updatedAt?: string | null;
+}
+
+export type ConfigServerStatusUpdateStatus = typeof ConfigServerStatusUpdateStatus[keyof typeof ConfigServerStatusUpdateStatus];
+
+
+export const ConfigServerStatusUpdateStatus = {
+  active: 'active',
+  inactive: 'inactive',
+} as const;
+
+export interface ConfigServerStatusUpdate {
+  status: ConfigServerStatusUpdateStatus;
+}
+
 export type ListPlansParams = {
 phone?: string;
 deviceId?: string;
+};
+
+export type DeleteConfigServer200 = {
+  success?: boolean;
 };
 

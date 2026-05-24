@@ -223,3 +223,62 @@ export const GetAdminStatsResponse = zod.object({
 })
 
 
+/**
+ * @summary List all VPN config servers
+ */
+export const ListConfigServersResponseItem = zod.object({
+  "id": zod.string(),
+  "serverName": zod.string(),
+  "network": zod.enum(['safaricom', 'airtel', 'telkom']),
+  "appType": zod.enum(['http_custom', 'http_injector']),
+  "planType": zod.enum(['unlimited', 'capped', 'wifi']),
+  "duration": zod.enum(['daily', 'weekly', 'monthly']),
+  "filename": zod.string(),
+  "originalName": zod.string(),
+  "fileSize": zod.number().nullish(),
+  "status": zod.enum(['active', 'inactive']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+export const ListConfigServersResponse = zod.array(ListConfigServersResponseItem)
+
+
+/**
+ * @summary Delete a config server
+ */
+export const DeleteConfigServerParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const DeleteConfigServerResponse = zod.object({
+  "success": zod.boolean().optional()
+})
+
+
+/**
+ * @summary Toggle config server active/inactive status
+ */
+export const UpdateConfigServerStatusParams = zod.object({
+  "id": zod.coerce.string()
+})
+
+export const UpdateConfigServerStatusBody = zod.object({
+  "status": zod.enum(['active', 'inactive'])
+})
+
+export const UpdateConfigServerStatusResponse = zod.object({
+  "id": zod.string(),
+  "serverName": zod.string(),
+  "network": zod.enum(['safaricom', 'airtel', 'telkom']),
+  "appType": zod.enum(['http_custom', 'http_injector']),
+  "planType": zod.enum(['unlimited', 'capped', 'wifi']),
+  "duration": zod.enum(['daily', 'weekly', 'monthly']),
+  "filename": zod.string(),
+  "originalName": zod.string(),
+  "fileSize": zod.number().nullish(),
+  "status": zod.enum(['active', 'inactive']),
+  "createdAt": zod.string(),
+  "updatedAt": zod.string().nullish()
+})
+
+

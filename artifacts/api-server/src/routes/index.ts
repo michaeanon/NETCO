@@ -6,6 +6,7 @@ import paymentRouter from "./payment";
 import plansRouter from "./plans";
 import contactRouter from "./contact";
 import statsRouter from "./stats";
+import adminServersRouter from "./admin-servers";
 
 const router: IRouter = Router();
 
@@ -16,5 +17,6 @@ router.use("/payment", paymentRouter);
 router.use("/plans", plansRouter);
 router.use("/contact", contactRouter);
 router.use(statsRouter);
+router.use(adminServersRouter);
 
 export default router;
