@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Shield, LogOut, User, LayoutDashboard } from "lucide-react";
+import { Menu, X, Shield, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -8,7 +8,7 @@ export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [location] = useLocation();
-  const { user, isAdminUser, signOut, loading } = useAuth();
+  const { user, signOut, loading } = useAuth();
 
   useEffect(() => {
     const handleScroll = () => setIsScrolled(window.scrollY > 20);
@@ -70,14 +70,6 @@ export function Navbar() {
           <div className="hidden md:flex items-center gap-2">
             {loading ? null : user ? (
               <>
-                {isAdminUser && (
-                  <Link href="/admin" data-testid="link-admin">
-                    <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-primary gap-1.5">
-                      <LayoutDashboard className="w-4 h-4" />
-                      Admin
-                    </Button>
-                  </Link>
-                )}
                 <Link href="/dashboard" data-testid="link-my-plans">
                   <Button variant="ghost" size="sm" className="text-muted-foreground hover:text-foreground gap-1.5">
                     <User className="w-4 h-4" />
@@ -144,13 +136,6 @@ export function Navbar() {
               <div className="pt-4 mt-2 border-t border-border space-y-2">
                 {user ? (
                   <>
-                    {isAdminUser && (
-                      <Link href="/admin">
-                        <Button variant="outline" className="w-full border-border gap-2">
-                          <LayoutDashboard className="w-4 h-4" /> Admin Panel
-                        </Button>
-                      </Link>
-                    )}
                     <Link href="/dashboard">
                       <Button variant="outline" className="w-full border-border gap-2">
                         <User className="w-4 h-4" /> My Plans
