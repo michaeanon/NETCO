@@ -1,8 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, Shield, LogOut, User } from "lucide-react";
+import { Menu, X, LogOut, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
+import netcoLogo from "/netco-logo.png";
 
 export function Navbar() {
   const [isScrolled, setIsScrolled] = useState(false);
@@ -40,14 +41,12 @@ export function Navbar() {
       <div className="w-full px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16 sm:h-20">
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 group" data-testid="link-logo">
-            <div className="relative flex items-center justify-center w-8 h-8 rounded-md bg-primary/10 border border-primary/20 group-hover:border-primary/50 transition-colors">
-              <Shield className="w-5 h-5 text-primary" />
-              <div className="absolute inset-0 glow-primary rounded-md opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            <span className="font-heading font-bold text-xl tracking-tight bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-              NETCO
-            </span>
+          <Link href="/" className="flex items-center group" data-testid="link-logo">
+            <img
+              src={netcoLogo}
+              alt="NETCO"
+              className="h-10 sm:h-12 w-auto object-contain transition-opacity group-hover:opacity-90"
+            />
           </Link>
 
           {/* Desktop Navigation */}
