@@ -1,8 +1,10 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
-import { db, ordersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, ordersTable, configServersTable, userPlansTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 import { InitiatePaymentBody } from "@workspace/api-zod";
+import path from "path";
+import fs from "fs";
 
 const router = Router();
 
@@ -10,6 +12,7 @@ const PAYFLOW_BASE = "https://payflow.top/api/v2";
 const PAYFLOW_API_KEY = process.env.PAYFLOW_API_KEY ?? "";
 const PAYFLOW_API_SECRET = process.env.PAYFLOW_API_SECRET ?? "";
 const PAYFLOW_ACCOUNT_ID = Number(process.env.PAYFLOW_ACCOUNT_ID ?? "0");
+const UPLOADS_DIR = path.resolve(process.cwd(), "uploads");
 
 function payflowHeaders() {
   return {
@@ -25,6 +28,75 @@ function normalizePhone(raw: string): string {
   if (digits.startsWith("254") && digits.length === 12) return digits;
   if (digits.startsWith("7") && digits.length === 9) return `254${digits}`;
   return digits;
+}
+
+function expiryFromDuration(duration: string): Date {
+  const now = new Date();
+  if (duration === "daily") now.setDate(now.getDate() + 1);
+  else if (duration === "weekly") now.setDate(now.getDate() + 7);
+  else now.setMonth(now.getMonth() + 1);
+  return now;
+}
+
+async function autoFulfillOrder(orderId: string, logger: typeof console) {
+  try {
+    const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, orderId)).limit(1);
+    if (!order || order.configUrl) return;
+
+    const [server] = await db
+      .select()
+      .from(configServersTable)
+      .where(
+        and(
+          eq(configServersTable.network, order.network),
+          eq(configServersTable.appType, order.appType),
+          eq(configServersTable.duration, order.duration),
+          eq(configServersTable.status, "active")
+        )
+      )
+      .limit(1);
+
+    if (!server) {
+      logger.warn?.(`No matching config server for order ${orderId}`);
+      return;
+    }
+
+    const filePath = path.join(UPLOADS_DIR, server.filename);
+    if (!fs.existsSync(filePath)) {
+      logger.warn?.(`Config file missing on disk for server ${server.id}`);
+      return;
+    }
+
+    const configUrl = `/api/orders/${orderId}/download`;
+    const ext = path.extname(server.originalName).toLowerCase();
+
+    await db.update(ordersTable)
+      .set({ status: "completed", configUrl })
+      .where(eq(ordersTable.id, orderId));
+
+    const existing = await db.select().from(userPlansTable).where(eq(userPlansTable.orderId, orderId)).limit(1);
+    if (existing.length === 0) {
+      await db.insert(userPlansTable).values({
+        id: randomUUID(),
+        orderId,
+        network: order.network,
+        planName: server.serverName,
+        planType: server.planType,
+        duration: order.duration,
+        appType: order.appType,
+        deviceId: order.deviceId,
+        phone: order.phone,
+        expiryDate: expiryFromDuration(order.duration),
+        status: "active",
+        configUrl,
+        fileExtension: ext,
+      });
+    }
+
+    logger.info?.(`Auto-fulfilled order ${orderId} with config ${server.serverName}`);
+  } catch (err) {
+    logger.error?.(`Auto-fulfill failed for order ${orderId}: ${err}`);
+  }
 }
 
 router.post("/initiate", async (req, res) => {
@@ -134,6 +206,8 @@ router.get("/status/:reference", async (req, res) => {
       mappedStatus = "pending";
     }
 
+    let configUrl: string | null = null;
+
     if (mappedStatus === "completed") {
       const [order] = await db
         .select()
@@ -141,11 +215,12 @@ router.get("/status/:reference", async (req, res) => {
         .where(eq(ordersTable.paymentReference, reference))
         .limit(1);
 
-      if (order && order.status !== "completed") {
-        await db
-          .update(ordersTable)
-          .set({ status: "completed" })
-          .where(eq(ordersTable.id, order.id));
+      if (order) {
+        if (order.status !== "completed") {
+          await autoFulfillOrder(order.id, req.log as typeof console);
+        }
+        const [freshOrder] = await db.select().from(ordersTable).where(eq(ordersTable.id, order.id)).limit(1);
+        configUrl = freshOrder?.configUrl ?? null;
       }
     }
 
@@ -155,10 +230,11 @@ router.get("/status/:reference", async (req, res) => {
       message: pfData.message ?? null,
       completedAt: pfData.data?.completed_at ?? null,
       transactionCode: pfData.data?.transaction_code ?? null,
+      configUrl,
     });
   } catch (err) {
     req.log.error({ err, reference }, "PayFlow status check failed");
-    res.json({ reference, status: "pending", message: null, completedAt: null });
+    res.json({ reference, status: "pending", message: null, completedAt: null, configUrl: null });
   }
 });
 

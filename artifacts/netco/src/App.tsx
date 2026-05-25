@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Switch, Route, Router as WouterRouter } from "wouter";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -36,6 +37,12 @@ function AdminRoute() {
   const { user, isAdminUser, loading } = useAuth();
   const [, navigate] = useLocation();
 
+  useEffect(() => {
+    if (!loading && (!user || !isAdminUser)) {
+      navigate("/login");
+    }
+  }, [loading, user, isAdminUser, navigate]);
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -44,10 +51,7 @@ function AdminRoute() {
     );
   }
 
-  if (!user || !isAdminUser) {
-    navigate("/login");
-    return null;
-  }
+  if (!user || !isAdminUser) return null;
 
   return <Admin />;
 }

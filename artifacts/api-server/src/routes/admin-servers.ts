@@ -81,16 +81,25 @@ router.post("/admin/servers", upload.single("configFile"), async (req, res) => {
 
 router.patch("/admin/servers/:id", async (req, res) => {
   const id = req.params["id"] as string;
-  const { status } = req.body as { status?: string };
+  const { status, isFree } = req.body as { status?: string; isFree?: boolean };
 
-  if (!status || !["active", "inactive"].includes(status)) {
+  if (status !== undefined && !["active", "inactive"].includes(status)) {
     res.status(400).json({ error: "status must be 'active' or 'inactive'" });
+    return;
+  }
+
+  const updateFields: Record<string, unknown> = {};
+  if (status !== undefined) updateFields.status = status;
+  if (isFree !== undefined) updateFields.isFree = Boolean(isFree);
+
+  if (Object.keys(updateFields).length === 0) {
+    res.status(400).json({ error: "Provide at least one field to update: status or isFree" });
     return;
   }
 
   const [updated] = await db
     .update(configServersTable)
-    .set({ status })
+    .set(updateFields)
     .where(eq(configServersTable.id, id))
     .returning();
 

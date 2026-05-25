@@ -1,10 +1,22 @@
 import { Router } from "express";
 import { randomUUID } from "crypto";
-import { db, ordersTable } from "@workspace/db";
-import { eq } from "drizzle-orm";
+import { db, ordersTable, configServersTable, userPlansTable } from "@workspace/db";
+import { eq, and } from "drizzle-orm";
 import { CreateOrderBody } from "@workspace/api-zod";
+import path from "path";
+import fs from "fs";
 
 const router = Router();
+
+const UPLOADS_DIR = path.resolve(process.cwd(), "uploads");
+
+function expiryFromDuration(duration: string): Date {
+  const now = new Date();
+  if (duration === "daily") now.setDate(now.getDate() + 1);
+  else if (duration === "weekly") now.setDate(now.getDate() + 7);
+  else now.setMonth(now.getMonth() + 1);
+  return now;
+}
 
 router.post("/", async (req, res) => {
   const parsed = CreateOrderBody.safeParse(req.body);
@@ -35,6 +47,82 @@ router.post("/", async (req, res) => {
   res.status(201).json(formatOrder(order));
 });
 
+router.post("/free", async (req, res) => {
+  const { packageId, network, duration, appType, deviceId, phone } = req.body as {
+    packageId?: string;
+    network?: string;
+    duration?: string;
+    appType?: string;
+    deviceId?: string;
+    phone?: string;
+  };
+
+  if (!network || !duration || !appType || !deviceId || !phone) {
+    res.status(400).json({ error: "Missing required fields: network, duration, appType, deviceId, phone" });
+    return;
+  }
+
+  const [freeServer] = await db
+    .select()
+    .from(configServersTable)
+    .where(
+      and(
+        eq(configServersTable.network, network),
+        eq(configServersTable.appType, appType),
+        eq(configServersTable.duration, duration),
+        eq(configServersTable.status, "active"),
+        eq(configServersTable.isFree, true)
+      )
+    )
+    .limit(1);
+
+  if (!freeServer) {
+    res.status(404).json({ error: "No free config available for this combination" });
+    return;
+  }
+
+  const filePath = path.join(UPLOADS_DIR, freeServer.filename);
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: "Free config file not found" });
+    return;
+  }
+
+  const orderId = randomUUID();
+  const configUrl = `/api/orders/${orderId}/download`;
+  const ext = path.extname(freeServer.originalName).toLowerCase();
+
+  const [order] = await db.insert(ordersTable).values({
+    id: orderId,
+    packageId: packageId ?? freeServer.id,
+    network,
+    duration,
+    appType,
+    deviceId,
+    phone,
+    amount: "0",
+    status: "completed",
+    configUrl,
+  }).returning();
+
+  await db.insert(userPlansTable).values({
+    id: randomUUID(),
+    orderId,
+    network,
+    planName: freeServer.serverName,
+    planType: freeServer.planType,
+    duration,
+    appType,
+    deviceId,
+    phone,
+    expiryDate: expiryFromDuration(duration),
+    status: "active",
+    configUrl,
+    fileExtension: ext,
+  });
+
+  res.status(201).json({ ...formatOrder(order), configUrl });
+});
+
 router.get("/:id", async (req, res) => {
   const [order] = await db
     .select()
@@ -48,6 +136,48 @@ router.get("/:id", async (req, res) => {
   }
 
   res.json(formatOrder(order));
+});
+
+router.get("/:id/download", async (req, res) => {
+  const { id } = req.params;
+
+  const [order] = await db.select().from(ordersTable).where(eq(ordersTable.id, id)).limit(1);
+  if (!order) {
+    res.status(404).json({ error: "Order not found" });
+    return;
+  }
+  if (order.status !== "completed") {
+    res.status(403).json({ error: "Order not completed yet" });
+    return;
+  }
+
+  const [server] = await db
+    .select()
+    .from(configServersTable)
+    .where(
+      and(
+        eq(configServersTable.network, order.network),
+        eq(configServersTable.appType, order.appType),
+        eq(configServersTable.duration, order.duration),
+        eq(configServersTable.status, "active")
+      )
+    )
+    .limit(1);
+
+  if (!server) {
+    res.status(404).json({ error: "Config server not found for this order" });
+    return;
+  }
+
+  const filePath = path.join(UPLOADS_DIR, server.filename);
+  if (!fs.existsSync(filePath)) {
+    res.status(404).json({ error: "Config file not found on disk" });
+    return;
+  }
+
+  res.setHeader("Content-Disposition", `attachment; filename="${server.originalName}"`);
+  res.setHeader("Content-Type", "application/octet-stream");
+  res.sendFile(filePath);
 });
 
 function calculateAmount(network: string, duration: string): number {
